@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use Illuminate\Auth\Events\Validated;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
@@ -32,7 +35,35 @@ class CategoryController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Make validation
+        $data = Validator::make($request->all(),[
+            'name'=>'required|string|unique:categories',
+        ]);
+
+        //Check validation
+
+        if($data->fails()){
+            return response()->json([
+                'success'=> false,
+                'message'=> 'Error',
+                'errors'=> $data->getMessageBag(),
+            ], 422);
+        }
+
+        $formData = $data->validated();
+        $formData['slug'] = Str::slug($formData['name']);
+
+        // category create
+
+       $category = Category::create($formData);
+
+        return response()->json([
+            'success'=> true,
+            'message'=> 'Successfully Category Created',
+            'data'=> $category,
+        ], 200);
+
+
     }
 
     /**
